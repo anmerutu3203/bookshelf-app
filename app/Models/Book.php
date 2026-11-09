@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Book extends Model
 {
@@ -17,10 +18,6 @@ class Book extends Model
         'published_date',
         'description',
         'image_url',
-    ];
-
-    protected $casts = [
-        'published_date' => 'date',
     ];
 
     public function user()
@@ -41,5 +38,29 @@ class Book extends Model
     public function favoritedByUsers()
     {
         return $this->belongsToMany(User::class, 'favorites')->withTimestamps();
+    }
+
+    /**
+     * 書籍を登録し、ジャンルを紐付ける。
+     */
+    public static function createWithGenres(User $user, array $attributes, array $genreIds): self
+    {
+        return DB::transaction(function () use ($user, $attributes, $genreIds) {
+            $book = $user->books()->create($attributes);
+            $book->genres()->sync($genreIds);
+
+            return $book;
+        });
+    }
+
+    /**
+     * 書籍を更新し、ジャンルの紐付けを入れ替える。
+     */
+    public function updateWithGenres(array $attributes, array $genreIds): void
+    {
+        DB::transaction(function () use ($attributes, $genreIds) {
+            $this->update($attributes);
+            $this->genres()->sync($genreIds);
+        });
     }
 }
