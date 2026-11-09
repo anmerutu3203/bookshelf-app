@@ -42,7 +42,7 @@ class BookRequest extends FormRequest
             'published_date.required' => '出版日は必須です',
             'published_date.date' => '出版日は有効な日付で入力してください',
             'description.string' => '説明は文字列で入力してください',
-            'image_url.url' => '画像URLはURL形式で入力してください',
+            'image_url.url' => '画像URLは有効なURL形式で入力してください',
             'image_url.max' => '画像URLは255文字以内で入力してください',
             'genres.required' => 'ジャンルは1つ以上選択してください',
             'genres.array' => 'ジャンルは1つ以上選択してください',
