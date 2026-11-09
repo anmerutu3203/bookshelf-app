@@ -59,7 +59,7 @@ class BookController extends Controller
 
         $book->updateWithGenres($request->safe()->except('genres'), $request->validated('genres'));
 
-        return redirect()->route('books.show', $book)->with('success', '書籍を更新しました');
+        return redirect()->route('books.show', $book)->with('success', '書籍情報を編集しました');
     }
 
     public function destroy(Book $book)

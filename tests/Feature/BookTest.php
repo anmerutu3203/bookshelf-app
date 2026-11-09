@@ -211,7 +211,7 @@ class BookTest extends TestCase
         $this->actingAs($book->user)
             ->put("/books/{$book->id}", $this->bookData(['title' => '更新後のタイトル', 'genres' => [$newGenre->id]]))
             ->assertRedirect("/books/{$book->id}")
-            ->assertSessionHas('success', '書籍を更新しました');
+            ->assertSessionHas('success', '書籍情報を編集しました');
 
         $book->refresh();
         $this->assertSame('更新後のタイトル', $book->title);
