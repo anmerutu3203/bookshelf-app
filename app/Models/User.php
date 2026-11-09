@@ -62,4 +62,12 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Review::class, 'review_likes')->withTimestamps();
     }
+
+    /**
+     * お気に入りを追加・解除する。追加したら true、解除したら false を返す。
+     */
+    public function toggleFavorite(Book $book): bool
+    {
+        return $this->favoriteBooks()->toggle($book->id)['attached'] !== [];
+    }
 }
