@@ -172,13 +172,20 @@ class BookTest extends TestCase
             ->post('/books', $this->bookData([
                 'title' => str_repeat('あ', 256),
                 'author' => str_repeat('あ', 256),
-                'description' => str_repeat('あ', 1001),
             ]))
             ->assertSessionHasErrors([
                 'title' => 'タイトルは255文字以内で入力してください',
                 'author' => '著者は255文字以内で入力してください',
-                'description' => '説明は1000文字以内で入力してください',
             ]);
+    }
+
+    public function test_store_allows_long_description(): void
+    {
+        $this->actingAs(User::factory()->create())
+            ->post('/books', $this->bookData(['description' => str_repeat('あ', 5000)]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('books', ['isbn' => '9784873115658', 'description' => str_repeat('あ', 5000)]);
     }
 
     public function test_store_allows_empty_description_and_image_url(): void

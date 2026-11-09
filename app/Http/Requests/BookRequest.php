@@ -20,7 +20,7 @@ class BookRequest extends FormRequest
             // 登録時は route('book') が null になるため、除外なしの一意チェックになる
             'isbn' => ['required', 'digits:13', Rule::unique('books', 'isbn')->ignore($this->route('book'))],
             'published_date' => ['required', 'date'],
-            'description' => ['nullable', 'string', 'max:1000'],
+            'description' => ['nullable', 'string'],
             'image_url' => ['nullable', 'url', 'max:255'],
             'genres' => ['required', 'array', 'min:1'],
             'genres.*' => ['integer', 'exists:genres,id'],
@@ -42,7 +42,6 @@ class BookRequest extends FormRequest
             'published_date.required' => '出版日は必須です',
             'published_date.date' => '出版日は有効な日付で入力してください',
             'description.string' => '説明は文字列で入力してください',
-            'description.max' => '説明は1000文字以内で入力してください',
             'image_url.url' => '画像URLはURL形式で入力してください',
             'image_url.max' => '画像URLは255文字以内で入力してください',
             'genres.required' => 'ジャンルは1つ以上選択してください',
