@@ -88,7 +88,8 @@ class AuthTest extends TestCase
     public function test_register_rejects_unmatched_password_confirmation(): void
     {
         $this->post('/register', $this->registerData(['password_confirmation' => 'different']))
-            ->assertSessionHasErrors(['password' => 'パスワードと確認用パスワードが一致しません']);
+            ->assertSessionHasErrors(['password_confirmation' => 'パスワードと一致しません'])
+            ->assertSessionDoesntHaveErrors('password');
     }
 
     public function test_user_can_login(): void
