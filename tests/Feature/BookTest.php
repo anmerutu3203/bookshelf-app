@@ -161,7 +161,7 @@ class BookTest extends TestCase
             ]))
             ->assertSessionHasErrors([
                 'published_date' => '出版日は有効な日付で入力してください',
-                'image_url' => '画像URLはURL形式で入力してください',
+                'image_url' => '画像URLは有効なURL形式で入力してください',
                 'genres.0' => '選択されたジャンルが存在しません',
             ]);
     }
