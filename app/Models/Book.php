@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -62,5 +63,21 @@ class Book extends Model
             $this->update($attributes);
             $this->genres()->sync($genreIds);
         });
+    }
+
+    /**
+     * 平均評価の高い順に上位の書籍を返す。レビューがない書籍は含めない。
+     * 平均評価が同じならレビュー件数が多い順、さらに同じなら登録が古い順。
+     */
+    public static function topRated(int $limit = 10): Collection
+    {
+        return static::has('reviews')
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
+            ->orderByDesc('reviews_avg_rating')
+            ->orderByDesc('reviews_count')
+            ->orderBy('id')
+            ->limit($limit)
+            ->get();
     }
 }

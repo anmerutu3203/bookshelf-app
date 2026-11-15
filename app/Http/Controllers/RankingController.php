@@ -2,5 +2,14 @@
 
 namespace App\Http\Controllers;
 
-// 各 Issue で実装する。ルート名を先に解決するためクラスだけ置いている
-class RankingController extends Controller {}
+use App\Models\Book;
+
+class RankingController extends Controller
+{
+    public function index()
+    {
+        $rankedBooks = Book::topRated();
+
+        return view('ranking.index', compact('rankedBooks'));
+    }
+}
