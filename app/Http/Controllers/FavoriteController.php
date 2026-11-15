@@ -17,8 +17,8 @@ class FavoriteController extends Controller
 
     public function toggle(Request $request, Book $book)
     {
-        $added = $request->user()->toggleFavorite($book);
+        $request->user()->toggleFavorite($book);
 
-        return back()->with('success', $added ? 'お気に入りに追加しました' : 'お気に入りから削除しました');
+        return back();
     }
 }

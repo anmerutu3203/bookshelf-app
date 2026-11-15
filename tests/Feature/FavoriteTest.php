@@ -33,12 +33,12 @@ class FavoriteTest extends TestCase
 
         $this->actingAs($user)->from("/books/{$book->id}")->post("/books/{$book->id}/favorites")
             ->assertRedirect("/books/{$book->id}")
-            ->assertSessionHas('success', 'お気に入りに追加しました');
+            ->assertSessionMissing('success');
         $this->assertDatabaseHas('favorites', ['user_id' => $user->id, 'book_id' => $book->id]);
 
         $this->actingAs($user)->from('/favorites')->post("/books/{$book->id}/favorites")
             ->assertRedirect('/favorites')
-            ->assertSessionHas('success', 'お気に入りから削除しました');
+            ->assertSessionMissing('success');
         $this->assertDatabaseMissing('favorites', ['user_id' => $user->id, 'book_id' => $book->id]);
     }
 
