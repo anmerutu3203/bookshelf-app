@@ -83,7 +83,7 @@ class GenreTest extends TestCase
     {
         $this->actingAs($this->user)->post('/genres', ['name' => '新ジャンル'])
             ->assertRedirect('/genres')
-            ->assertSessionHas('success', 'ジャンルを登録しました');
+            ->assertSessionHas('success', 'ジャンルを作成しました。');
 
         $this->assertDatabaseHas('genres', ['name' => '新ジャンル']);
     }
@@ -95,7 +95,9 @@ class GenreTest extends TestCase
         $this->actingAs($this->user)->post('/genres', ['name' => ''])
             ->assertSessionHasErrors(['name' => 'ジャンル名は必須です']);
         $this->actingAs($this->user)->post('/genres', ['name' => '小説'])
-            ->assertSessionHasErrors(['name' => 'このジャンル名は既に登録されています']);
+            ->assertSessionHasErrors(['name' => 'そのジャンル名は既に使用されています']);
+        $this->actingAs($this->user)->post('/genres', ['name' => ['配列']])
+            ->assertSessionHasErrors(['name' => 'ジャンル名は文字列で入力してください']);
         $this->actingAs($this->user)->post('/genres', ['name' => str_repeat('あ', 256)])
             ->assertSessionHasErrors(['name' => 'ジャンル名は255文字以内で入力してください']);
     }
@@ -118,7 +120,7 @@ class GenreTest extends TestCase
 
         $this->actingAs($this->user)->put("/genres/{$genre->id}", ['name' => '文学'])
             ->assertRedirect('/genres')
-            ->assertSessionHas('success', 'ジャンルを編集しました');
+            ->assertSessionHas('success', 'ジャンルを更新しました');
 
         $this->assertDatabaseHas('genres', ['id' => $genre->id, 'name' => '文学']);
     }
@@ -131,7 +133,7 @@ class GenreTest extends TestCase
         $this->actingAs($this->user)->put("/genres/{$genre->id}", ['name' => '小説'])
             ->assertSessionHasNoErrors();
         $this->actingAs($this->user)->put("/genres/{$genre->id}", ['name' => '歴史'])
-            ->assertSessionHasErrors(['name' => 'このジャンル名は既に登録されています']);
+            ->assertSessionHasErrors(['name' => 'そのジャンル名は既に使用されています']);
     }
 
     // 削除
@@ -154,7 +156,7 @@ class GenreTest extends TestCase
 
         $this->actingAs($this->user)->delete("/genres/{$genre->id}")
             ->assertRedirect('/genres')
-            ->assertSessionHas('error', '書籍が登録されているジャンルは削除できません');
+            ->assertSessionHas('error', 'このジャンルには書籍が紐づいているため削除できません');
 
         $this->assertDatabaseHas('genres', ['id' => $genre->id]);
     }

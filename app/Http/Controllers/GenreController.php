@@ -30,7 +30,7 @@ class GenreController extends Controller
     {
         Genre::create($request->validated());
 
-        return redirect()->route('genres.index')->with('success', 'ジャンルを登録しました');
+        return redirect()->route('genres.index')->with('success', 'ジャンルを作成しました。');
     }
 
     public function edit(Genre $genre)
@@ -42,13 +42,13 @@ class GenreController extends Controller
     {
         $genre->update($request->validated());
 
-        return redirect()->route('genres.index')->with('success', 'ジャンルを編集しました');
+        return redirect()->route('genres.index')->with('success', 'ジャンルを更新しました');
     }
 
     public function destroy(Genre $genre)
     {
         if (! $genre->deleteIfUnused()) {
-            return redirect()->route('genres.index')->with('error', '書籍が登録されているジャンルは削除できません');
+            return redirect()->route('genres.index')->with('error', 'このジャンルには書籍が紐づいているため削除できません');
         }
 
         return redirect()->route('genres.index')->with('success', 'ジャンルを削除しました');
