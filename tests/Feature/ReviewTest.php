@@ -52,17 +52,22 @@ class ReviewTest extends TestCase
             $this->actingAs($user)->post("/books/{$book->id}/reviews", ['rating' => $rating, 'comment' => '感想'])
                 ->assertSessionHasErrors(['rating' => '評価は1〜5で選択してください']);
         }
-        $this->assertDatabaseCount('reviews', 0);
+
+        $this->actingAs($user)->post("/books/{$book->id}/reviews", ['rating' => 3, 'comment' => str_repeat('あ', 1001)])
+            ->assertSessionHasErrors(['comment' => 'コメントは1000文字以内で入力してください']);
+        $this->actingAs($user)->post("/books/{$book->id}/reviews", ['rating' => 3, 'comment' => str_repeat('あ', 1000)])
+            ->assertSessionHasNoErrors();
+        $this->assertDatabaseCount('reviews', 1);
     }
 
-    public function test_user_cannot_post_second_review_for_same_book(): void
+    public function test_user_can_post_second_review_for_same_book(): void
     {
         $review = Review::factory()->create();
 
         $this->actingAs($review->user)->post("/books/{$review->book_id}/reviews", ['rating' => 5, 'comment' => '2回目'])
-            ->assertSessionHasErrors(['rating' => 'この書籍には既にレビューを投稿しています']);
+            ->assertSessionHasNoErrors();
 
-        $this->assertDatabaseCount('reviews', 1);
+        $this->assertDatabaseCount('reviews', 2);
     }
 
     // 編集
@@ -83,7 +88,7 @@ class ReviewTest extends TestCase
 
         $this->actingAs($review->user)->put("/reviews/{$review->id}", ['rating' => 5, 'comment' => '読み直して評価が変わった'])
             ->assertRedirect("/books/{$review->book_id}")
-            ->assertSessionHas('success', 'レビューを編集しました');
+            ->assertSessionHas('success', 'レビューを更新しました');
 
         $this->assertDatabaseHas('reviews', ['id' => $review->id, 'rating' => 5, 'comment' => '読み直して評価が変わった']);
     }

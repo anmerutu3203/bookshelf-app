@@ -30,7 +30,7 @@ class ReviewController extends Controller
 
         $review->update($request->validated());
 
-        return redirect()->route('books.show', $review->book_id)->with('success', 'レビューを編集しました');
+        return redirect()->route('books.show', $review->book_id)->with('success', 'レビューを更新しました');
     }
 
     public function destroy(Review $review)
