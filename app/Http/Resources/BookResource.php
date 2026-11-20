@@ -14,7 +14,7 @@ class BookResource extends JsonResource
             'title' => $this->title,
             'author' => $this->author,
             'isbn' => $this->isbn,
-            'published_date' => $this->published_date,
+            'published_date' => $this->published_date?->format('Y-m-d'),
             'genres' => GenreResource::collection($this->whenLoaded('genres')),
             // レビューがない書籍は null
             'average_rating' => $this->whenHas('reviews_avg_rating', fn () => $this->reviews_avg_rating === null ? null : round($this->reviews_avg_rating, 2)),

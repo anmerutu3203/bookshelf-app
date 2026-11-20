@@ -126,10 +126,9 @@ class BookTest extends TestCase
             ->assertSessionHasErrors([
                 'title' => 'タイトルは必須です。',
                 'author' => '著者は必須です。',
-                'isbn' => 'ISBNは必須です。',
-                'published_date' => '出版日は必須です。',
                 'genres' => 'ジャンルは1つ以上選択してください。',
-            ]);
+            ])
+            ->assertSessionDoesntHaveErrors(['isbn', 'published_date']);
     }
 
     public function test_store_rejects_invalid_isbn(): void
@@ -195,6 +194,19 @@ class BookTest extends TestCase
             ->assertSessionHasNoErrors();
 
         $this->assertDatabaseHas('books', ['isbn' => '9784873115658', 'description' => null, 'image_url' => null]);
+    }
+
+    public function test_store_allows_empty_isbn_and_published_date(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->post('/books', $this->bookData(['isbn' => '', 'published_date' => '']))
+            ->assertSessionHasNoErrors();
+        // ISBN 未入力の書籍は複数登録できる
+        $this->actingAs($user)->post('/books', $this->bookData(['title' => '2冊目', 'isbn' => '', 'published_date' => '']))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(2, Book::whereNull('isbn')->whereNull('published_date')->count());
+        $this->get('/books/'.Book::firstWhere('title', '2冊目')->id)->assertSee('未登録');
     }
 
     // 編集・更新

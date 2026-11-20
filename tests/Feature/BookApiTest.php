@@ -135,6 +135,7 @@ class BookApiTest extends TestCase
         $this->postJson('/api/v1/books', $payload)
             ->assertCreated()
             ->assertJsonPath('data.title', 'API書籍')
+            ->assertJsonPath('data.published_date', '2020-01-01')
             ->assertJsonPath('data.user_id', $payload['user_id'])
             ->assertJsonPath('data.genres.0.id', $payload['genres'][0]);
 
@@ -157,6 +158,8 @@ class BookApiTest extends TestCase
             ]);
         $this->postJson('/api/v1/books', $this->validPayload(['user_id' => null]))
             ->assertJsonValidationErrors(['user_id' => '登録者IDは必須です。']);
+        $this->postJson('/api/v1/books', $this->validPayload(['isbn' => '', 'published_date' => '']))
+            ->assertJsonValidationErrors(['isbn' => 'ISBNは必須です。', 'published_date' => '出版日は必須です。']);
         $this->postJson('/api/v1/books', $this->validPayload(['user_id' => 'abc']))
             ->assertJsonValidationErrors(['user_id' => '登録者IDは整数で入力してください。']);
         $this->assertDatabaseCount('books', 1);

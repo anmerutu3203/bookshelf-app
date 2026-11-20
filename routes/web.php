@@ -35,6 +35,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/books/{book}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::resource('reviews', ReviewController::class)->only(['edit', 'update', 'destroy']);
     Route::post('/reviews/{review}/like', [ReviewLikeController::class, 'toggle'])->name('reviews.like');
+
+    // ponytail: ナビゲーションのリンク先だけ用意した仮ルート。各 issue（#17・#19・#20）で本実装に置き換える
+    foreach (['reports.index' => '/reports', 'reading-plans.index' => '/reading-plans', 'notifications.index' => '/notifications'] as $name => $uri) {
+        Route::get($uri, fn () => redirect()->route('books.index')->with('error', 'この機能は準備中です。'))->name($name);
+    }
 });
 
 // /books/create より後に定義し、{book} が create にマッチしないようにする
