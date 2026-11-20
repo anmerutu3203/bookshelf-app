@@ -5,6 +5,7 @@ use App\Http\Controllers\BookIsbnController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\RankingController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ReviewLikeController;
 use Illuminate\Support\Facades\Route;
@@ -38,8 +39,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('reviews', ReviewController::class)->only(['edit', 'update', 'destroy']);
     Route::post('/reviews/{review}/like', [ReviewLikeController::class, 'toggle'])->name('reviews.like');
 
-    // ponytail: ナビゲーションのリンク先だけ用意した仮ルート。各 issue（#17・#19・#20）で本実装に置き換える
-    foreach (['reports.index' => '/reports', 'reading-plans.index' => '/reading-plans', 'notifications.index' => '/notifications'] as $name => $uri) {
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+
+    // ponytail: ナビゲーションのリンク先だけ用意した仮ルート。各 issue（#19・#20）で本実装に置き換える
+    foreach (['reading-plans.index' => '/reading-plans', 'notifications.index' => '/notifications'] as $name => $uri) {
         Route::get($uri, fn () => redirect()->route('books.index')->with('error', 'この機能は準備中です。'))->name($name);
     }
 });
