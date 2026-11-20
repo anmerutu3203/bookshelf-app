@@ -21,9 +21,9 @@ class BookRequest extends WebBookRequest
     {
         return [
             ...parent::messages(),
-            'user_id.required' => '登録者IDは必須です',
-            'user_id.integer' => '登録者IDは整数で入力してください',
-            'user_id.exists' => '指定された登録者が存在しません',
+            'user_id.required' => '登録者IDは必須です。',
+            'user_id.integer' => '登録者IDは整数で入力してください。',
+            'user_id.exists' => '指定された登録者は存在しません。',
         ];
     }
 }

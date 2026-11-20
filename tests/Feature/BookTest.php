@@ -124,11 +124,11 @@ class BookTest extends TestCase
         $this->actingAs(User::factory()->create())
             ->post('/books', [])
             ->assertSessionHasErrors([
-                'title' => 'タイトルは必須です',
-                'author' => '著者は必須です',
-                'isbn' => 'ISBNは必須です',
-                'published_date' => '出版日は必須です',
-                'genres' => 'ジャンルは1つ以上選択してください',
+                'title' => 'タイトルは必須です。',
+                'author' => '著者は必須です。',
+                'isbn' => 'ISBNは必須です。',
+                'published_date' => '出版日は必須です。',
+                'genres' => 'ジャンルは1つ以上選択してください。',
             ]);
     }
 
@@ -137,9 +137,9 @@ class BookTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)->post('/books', $this->bookData(['isbn' => '978487311565']))
-            ->assertSessionHasErrors(['isbn' => 'ISBNは13桁の数字で入力してください']);
+            ->assertSessionHasErrors(['isbn' => 'ISBNは13桁の数字で入力してください。']);
         $this->actingAs($user)->post('/books', $this->bookData(['isbn' => '978-4873115658']))
-            ->assertSessionHasErrors(['isbn' => 'ISBNは13桁の数字で入力してください']);
+            ->assertSessionHasErrors(['isbn' => 'ISBNは13桁の数字で入力してください。']);
     }
 
     public function test_store_rejects_duplicate_isbn(): void
@@ -148,7 +148,7 @@ class BookTest extends TestCase
 
         $this->actingAs(User::factory()->create())
             ->post('/books', $this->bookData())
-            ->assertSessionHasErrors(['isbn' => 'このISBNは既に登録されています']);
+            ->assertSessionHasErrors(['isbn' => 'このISBNは既に登録されています。']);
     }
 
     public function test_store_rejects_invalid_date_url_and_genre(): void
@@ -160,9 +160,9 @@ class BookTest extends TestCase
                 'genres' => [999],
             ]))
             ->assertSessionHasErrors([
-                'published_date' => '出版日は有効な日付で入力してください',
-                'image_url' => '画像URLは有効なURL形式で入力してください',
-                'genres.0' => '選択されたジャンルが存在しません',
+                'published_date' => '出版日は有効な日付で入力してください。',
+                'image_url' => '画像URLは有効なURL形式で入力してください。',
+                'genres.0' => '選択されたジャンルが存在しません。',
             ]);
     }
 
@@ -174,8 +174,8 @@ class BookTest extends TestCase
                 'author' => str_repeat('あ', 256),
             ]))
             ->assertSessionHasErrors([
-                'title' => 'タイトルは255文字以内で入力してください',
-                'author' => '著者は255文字以内で入力してください',
+                'title' => 'タイトルは255文字以内で入力してください。',
+                'author' => '著者は255文字以内で入力してください。',
             ]);
     }
 
@@ -241,7 +241,7 @@ class BookTest extends TestCase
 
         $this->actingAs($book->user)
             ->put("/books/{$book->id}", $this->bookData(['isbn' => '9784101010014']))
-            ->assertSessionHasErrors(['isbn' => 'このISBNは既に登録されています']);
+            ->assertSessionHasErrors(['isbn' => 'このISBNは既に登録されています。']);
     }
 
     public function test_other_user_cannot_edit_or_update_book(): void
