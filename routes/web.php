@@ -4,6 +4,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\BookIsbnController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GenreController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RankingController;
 use App\Http\Controllers\ReadingPlanController;
 use App\Http\Controllers\ReportController;
@@ -45,10 +46,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('reading-plans', ReadingPlanController::class)->except('show')->parameters(['reading-plans' => 'plan']);
     Route::post('/reading-plans/{plan}/complete', [ReadingPlanController::class, 'complete'])->name('reading-plans.complete');
 
-    // ponytail: ナビゲーションのリンク先だけ用意した仮ルート。#20 で本実装に置き換える
-    foreach (['notifications.index' => '/notifications'] as $name => $uri) {
-        Route::get($uri, fn () => redirect()->route('books.index')->with('error', 'この機能は準備中です。'))->name($name);
-    }
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'read'])->name('notifications.read');
 });
 
 // /books/create より後に定義し、{book} が create にマッチしないようにする
