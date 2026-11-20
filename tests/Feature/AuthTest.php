@@ -52,9 +52,9 @@ class AuthTest extends TestCase
     public function test_register_requires_all_fields(): void
     {
         $this->post('/register', [])->assertSessionHasErrors([
-            'name' => 'お名前を入力してください',
-            'email' => 'メールアドレスを入力してください',
-            'password' => 'パスワードを入力してください',
+            'name' => 'お名前を入力してください。',
+            'email' => 'メールアドレスを入力してください。',
+            'password' => 'パスワードを入力してください。',
         ]);
         $this->assertGuest();
     }
@@ -62,7 +62,7 @@ class AuthTest extends TestCase
     public function test_register_rejects_invalid_email(): void
     {
         $this->post('/register', $this->registerData(['email' => 'invalid']))
-            ->assertSessionHasErrors(['email' => 'メールアドレスはメール形式で入力してください']);
+            ->assertSessionHasErrors(['email' => 'メールアドレスはメール形式で入力してください。']);
     }
 
     public function test_register_rejects_duplicate_email(): void
@@ -70,25 +70,25 @@ class AuthTest extends TestCase
         User::factory()->create(['email' => 'test@example.com']);
 
         $this->post('/register', $this->registerData())
-            ->assertSessionHasErrors(['email' => 'このメールアドレスは既に登録されています']);
+            ->assertSessionHasErrors(['email' => 'このメールアドレスは既に登録されています。']);
     }
 
     public function test_register_rejects_too_long_name(): void
     {
         $this->post('/register', $this->registerData(['name' => str_repeat('あ', 256)]))
-            ->assertSessionHasErrors(['name' => 'お名前は255文字以内で入力してください']);
+            ->assertSessionHasErrors(['name' => 'お名前は255文字以内で入力してください。']);
     }
 
     public function test_register_rejects_short_password(): void
     {
         $this->post('/register', $this->registerData(['password' => 'short', 'password_confirmation' => 'short']))
-            ->assertSessionHasErrors(['password' => 'パスワードは8文字以上で入力してください']);
+            ->assertSessionHasErrors(['password' => 'パスワードは8文字以上で入力してください。']);
     }
 
     public function test_register_rejects_unmatched_password_confirmation(): void
     {
         $this->post('/register', $this->registerData(['password_confirmation' => 'different']))
-            ->assertSessionHasErrors(['password_confirmation' => 'パスワードと一致しません'])
+            ->assertSessionHasErrors(['password_confirmation' => 'パスワードと一致しません。'])
             ->assertSessionDoesntHaveErrors('password');
     }
 
@@ -105,15 +105,15 @@ class AuthTest extends TestCase
     public function test_login_requires_email_and_password(): void
     {
         $this->post('/login', [])->assertSessionHasErrors([
-            'email' => 'メールアドレスを入力してください',
-            'password' => 'パスワードを入力してください',
+            'email' => 'メールアドレスを入力してください。',
+            'password' => 'パスワードを入力してください。',
         ]);
     }
 
     public function test_login_rejects_invalid_email_format(): void
     {
         $this->post('/login', ['email' => 'invalid', 'password' => 'password'])
-            ->assertSessionHasErrors(['email' => 'メールアドレスはメール形式で入力してください']);
+            ->assertSessionHasErrors(['email' => 'メールアドレスはメール形式で入力してください。']);
     }
 
     public function test_login_fails_with_wrong_credentials(): void

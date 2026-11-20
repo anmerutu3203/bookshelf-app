@@ -93,13 +93,13 @@ class GenreTest extends TestCase
         Genre::factory()->create(['name' => '小説']);
 
         $this->actingAs($this->user)->post('/genres', ['name' => ''])
-            ->assertSessionHasErrors(['name' => 'ジャンル名は必須です']);
+            ->assertSessionHasErrors(['name' => 'ジャンル名は必須です。']);
         $this->actingAs($this->user)->post('/genres', ['name' => '小説'])
-            ->assertSessionHasErrors(['name' => 'そのジャンル名は既に使用されています']);
+            ->assertSessionHasErrors(['name' => 'そのジャンル名は既に使用されています。']);
         $this->actingAs($this->user)->post('/genres', ['name' => ['配列']])
-            ->assertSessionHasErrors(['name' => 'ジャンル名は文字列で入力してください']);
+            ->assertSessionHasErrors(['name' => 'ジャンル名は文字列で入力してください。']);
         $this->actingAs($this->user)->post('/genres', ['name' => str_repeat('あ', 256)])
-            ->assertSessionHasErrors(['name' => 'ジャンル名は255文字以内で入力してください']);
+            ->assertSessionHasErrors(['name' => 'ジャンル名は255文字以内で入力してください。']);
     }
 
     // 編集
@@ -133,7 +133,7 @@ class GenreTest extends TestCase
         $this->actingAs($this->user)->put("/genres/{$genre->id}", ['name' => '小説'])
             ->assertSessionHasNoErrors();
         $this->actingAs($this->user)->put("/genres/{$genre->id}", ['name' => '歴史'])
-            ->assertSessionHasErrors(['name' => 'そのジャンル名は既に使用されています']);
+            ->assertSessionHasErrors(['name' => 'そのジャンル名は既に使用されています。']);
     }
 
     // 削除

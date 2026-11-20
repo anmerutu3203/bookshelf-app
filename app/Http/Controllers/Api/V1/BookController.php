@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\BookIndexRequest;
 use App\Http\Requests\Api\V1\BookRequest;
+use App\Http\Resources\BookCollection;
 use App\Http\Resources\BookResource;
 use App\Models\Book;
 use App\Models\User;
@@ -18,10 +19,10 @@ class BookController extends Controller
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->latest()
-            ->paginate($request->validated('per_page', 10))
+            ->paginate($request->validated('per_page', 20))
             ->withQueryString();
 
-        return BookResource::collection($books);
+        return new BookCollection($books);
     }
 
     public function show(Book $book)

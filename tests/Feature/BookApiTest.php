@@ -40,13 +40,17 @@ class BookApiTest extends TestCase
         $response = $this->getJson('/api/v1/books')
             ->assertOk()
             ->assertJsonCount(2, 'data')
-            ->assertJsonStructure(['data', 'links', 'meta' => ['current_page', 'per_page', 'total']]);
+            ->assertJsonPath('meta', ['current_page' => 1, 'last_page' => 1, 'per_page' => 20, 'total' => 2])
+            ->assertJsonMissingPath('links');
 
         $item = collect($response->json('data'))->firstWhere('id', $book->id);
+        $this->assertSame(
+            ['id', 'title', 'author', 'isbn', 'published_date', 'genres', 'average_rating', 'review_count'],
+            array_keys($item),
+        );
         $this->assertSame([['id' => $genre->id, 'name' => '小説']], $item['genres']);
         $this->assertEquals(4.5, $item['average_rating']);
-        $this->assertSame(2, $item['reviews_count']);
-        $this->assertArrayNotHasKey('reviews', $item);
+        $this->assertSame(2, $item['review_count']);
         $this->assertNull(collect($response->json('data'))->firstWhere('id', '!=', $book->id)['average_rating']);
     }
 
@@ -66,11 +70,11 @@ class BookApiTest extends TestCase
 
     public function test_index_paginates_with_per_page(): void
     {
-        Book::factory()->count(12)->create();
+        Book::factory()->count(22)->create();
 
-        $this->getJson('/api/v1/books')->assertJsonCount(10, 'data')->assertJsonPath('meta.total', 12);
-        $this->getJson('/api/v1/books?per_page=5&page=3')
-            ->assertJsonCount(2, 'data')->assertJsonPath('meta.current_page', 3);
+        $this->getJson('/api/v1/books')->assertJsonCount(20, 'data')->assertJsonPath('meta.total', 22);
+        $this->getJson('/api/v1/books?per_page=5&page=5')
+            ->assertJsonCount(2, 'data')->assertJsonPath('meta.current_page', 5);
     }
 
     public function test_index_validates_query_in_japanese(): void
@@ -78,15 +82,15 @@ class BookApiTest extends TestCase
         $this->getJson('/api/v1/books?genre_id=999&page=0&per_page=101')
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
-                'genre_id' => '指定されたジャンルが存在しません',
-                'page' => 'ページ番号は1以上で入力してください',
-                'per_page' => '1ページあたりの件数は1〜100で入力してください',
+                'genre_id' => '指定されたジャンルが存在しません。',
+                'page' => 'ページ番号は1以上で入力してください。',
+                'per_page' => '1ページあたりの件数は1〜100で入力してください。',
             ])
-            ->assertJsonPath('message', '指定されたジャンルが存在しません （他 2 件のエラー）');
+            ->assertJsonPath('message', '指定されたジャンルが存在しません。 （他 2 件のエラー）');
         $this->getJson('/api/v1/books?genre_id=abc&per_page=abc')
             ->assertJsonValidationErrors([
-                'genre_id' => 'ジャンルIDは整数で入力してください',
-                'per_page' => '1ページあたりの件数は整数で入力してください',
+                'genre_id' => 'ジャンルIDは整数で入力してください。',
+                'per_page' => '1ページあたりの件数は整数で入力してください。',
             ]);
     }
 
@@ -117,8 +121,11 @@ class BookApiTest extends TestCase
             // Accept ヘッダーなしでも JSON で返ること
             $this->$method('/api/v1/books/999')
                 ->assertNotFound()
-                ->assertExactJson(['message' => '指定されたデータが見つかりません']);
+                ->assertExactJson(['error' => '書籍が見つかりませんでした。']);
         }
+        $this->getJson('/api/v1/unknown')
+            ->assertNotFound()
+            ->assertExactJson(['error' => '指定されたデータが見つかりません。']);
     }
 
     public function test_store_creates_book_with_genres_and_returns_201(): void
@@ -143,15 +150,15 @@ class BookApiTest extends TestCase
         $this->post('/api/v1/books', $this->validPayload(['user_id' => 999, 'title' => '', 'genres' => []]))
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
-                'user_id' => '指定された登録者が存在しません',
-                'title' => 'タイトルは必須です',
-                'isbn' => 'このISBNは既に登録されています',
-                'genres' => 'ジャンルは1つ以上選択してください',
+                'user_id' => '指定された登録者は存在しません。',
+                'title' => 'タイトルは必須です。',
+                'isbn' => 'このISBNは既に登録されています。',
+                'genres' => 'ジャンルは1つ以上選択してください。',
             ]);
         $this->postJson('/api/v1/books', $this->validPayload(['user_id' => null]))
-            ->assertJsonValidationErrors(['user_id' => '登録者IDは必須です']);
+            ->assertJsonValidationErrors(['user_id' => '登録者IDは必須です。']);
         $this->postJson('/api/v1/books', $this->validPayload(['user_id' => 'abc']))
-            ->assertJsonValidationErrors(['user_id' => '登録者IDは整数で入力してください']);
+            ->assertJsonValidationErrors(['user_id' => '登録者IDは整数で入力してください。']);
         $this->assertDatabaseCount('books', 1);
     }
 
@@ -174,7 +181,7 @@ class BookApiTest extends TestCase
         $book = Book::factory()->create();
 
         $this->putJson("/api/v1/books/{$book->id}", $this->validPayload())
-            ->assertJsonValidationErrors(['isbn' => 'このISBNは既に登録されています']);
+            ->assertJsonValidationErrors(['isbn' => 'このISBNは既に登録されています。']);
     }
 
     public function test_destroy_deletes_book_and_returns_204(): void
