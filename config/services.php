@@ -31,4 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'google_books' => [
+        'url' => 'https://www.googleapis.com/books/v1/volumes',
+        // 未設定でも動くが、キーなしは1日あたりのリクエスト数の制限が厳しい
+        'key' => env('GOOGLE_BOOKS_API_KEY'),
+    ],
+
 ];
