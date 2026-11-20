@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -79,5 +80,17 @@ class Book extends Model
             ->orderBy('id')
             ->limit($limit)
             ->get();
+    }
+
+    /**
+     * タイトルか著者の部分一致と、ジャンルで絞り込む。未指定の条件は無視する。
+     */
+    public function scopeSearch(Builder $query, ?string $keyword, ?int $genreId): Builder
+    {
+        return $query
+            ->when($keyword, fn (Builder $query) => $query->where(fn (Builder $query) => $query
+                ->where('title', 'like', "%{$keyword}%")
+                ->orWhere('author', 'like', "%{$keyword}%")))
+            ->when($genreId, fn (Builder $query) => $query->whereHas('genres', fn (Builder $query) => $query->whereKey($genreId)));
     }
 }
