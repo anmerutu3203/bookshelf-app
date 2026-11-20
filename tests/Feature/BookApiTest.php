@@ -7,6 +7,7 @@ use App\Models\Genre;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class BookApiTest extends TestCase
@@ -16,7 +17,6 @@ class BookApiTest extends TestCase
     private function validPayload(array $overrides = []): array
     {
         return [
-            'user_id' => User::factory()->create()->id,
             'title' => 'API書籍',
             'author' => 'API著者',
             'isbn' => '9784000000001',
@@ -117,6 +117,8 @@ class BookApiTest extends TestCase
 
     public function test_missing_book_returns_json_404(): void
     {
+        Sanctum::actingAs(User::factory()->create());
+
         foreach (['get', 'put', 'delete'] as $method) {
             // Accept ヘッダーなしでも JSON で返ること
             $this->$method('/api/v1/books/999')
@@ -128,46 +130,45 @@ class BookApiTest extends TestCase
             ->assertExactJson(['error' => '指定されたデータが見つかりません。']);
     }
 
-    public function test_store_creates_book_with_genres_and_returns_201(): void
+    public function test_store_creates_book_owned_by_token_user_and_returns_201(): void
     {
-        $payload = $this->validPayload();
+        $user = Sanctum::actingAs(User::factory()->create());
+        // user_id を送っても無視され、トークンの持ち主が登録者になる
+        $payload = $this->validPayload(['user_id' => User::factory()->create()->id]);
 
         $this->postJson('/api/v1/books', $payload)
             ->assertCreated()
             ->assertJsonPath('data.title', 'API書籍')
             ->assertJsonPath('data.published_date', '2020-01-01')
-            ->assertJsonPath('data.user_id', $payload['user_id'])
+            ->assertJsonPath('data.user_id', $user->id)
             ->assertJsonPath('data.genres.0.id', $payload['genres'][0]);
 
         $book = Book::firstWhere('isbn', '9784000000001');
-        $this->assertSame($payload['user_id'], $book->user_id);
+        $this->assertSame($user->id, $book->user_id);
         $this->assertSame($payload['genres'], $book->genres->pluck('id')->all());
     }
 
     public function test_store_validates_in_japanese(): void
     {
+        Sanctum::actingAs(User::factory()->create());
         Book::factory()->create(['isbn' => '9784000000001']);
 
-        $this->post('/api/v1/books', $this->validPayload(['user_id' => 999, 'title' => '', 'genres' => []]))
+        $this->post('/api/v1/books', $this->validPayload(['title' => '', 'genres' => []]))
             ->assertUnprocessable()
             ->assertJsonValidationErrors([
-                'user_id' => '指定された登録者は存在しません。',
                 'title' => 'タイトルは必須です。',
                 'isbn' => 'このISBNは既に登録されています。',
                 'genres' => 'ジャンルは1つ以上選択してください。',
             ]);
-        $this->postJson('/api/v1/books', $this->validPayload(['user_id' => null]))
-            ->assertJsonValidationErrors(['user_id' => '登録者IDは必須です。']);
         $this->postJson('/api/v1/books', $this->validPayload(['isbn' => '', 'published_date' => '']))
             ->assertJsonValidationErrors(['isbn' => 'ISBNは必須です。', 'published_date' => '出版日は必須です。']);
-        $this->postJson('/api/v1/books', $this->validPayload(['user_id' => 'abc']))
-            ->assertJsonValidationErrors(['user_id' => '登録者IDは整数で入力してください。']);
         $this->assertDatabaseCount('books', 1);
     }
 
     public function test_update_changes_book_and_keeps_own_isbn(): void
     {
-        $book = Book::factory()->create(['isbn' => '9784000000001']);
+        $owner = Sanctum::actingAs(User::factory()->create());
+        $book = Book::factory()->for($owner)->create(['isbn' => '9784000000001']);
         $payload = $this->validPayload(['title' => '更新後']);
 
         $this->putJson("/api/v1/books/{$book->id}", $payload)
@@ -175,13 +176,14 @@ class BookApiTest extends TestCase
             ->assertJsonPath('data.title', '更新後')
             ->assertJsonPath('data.genres.0.id', $payload['genres'][0]);
 
-        $this->assertDatabaseHas('books', ['id' => $book->id, 'title' => '更新後', 'user_id' => $payload['user_id']]);
+        $this->assertDatabaseHas('books', ['id' => $book->id, 'title' => '更新後', 'user_id' => $owner->id]);
     }
 
     public function test_update_rejects_other_books_isbn(): void
     {
+        $owner = Sanctum::actingAs(User::factory()->create());
         Book::factory()->create(['isbn' => '9784000000001']);
-        $book = Book::factory()->create();
+        $book = Book::factory()->for($owner)->create();
 
         $this->putJson("/api/v1/books/{$book->id}", $this->validPayload())
             ->assertJsonValidationErrors(['isbn' => 'このISBNは既に登録されています。']);
@@ -189,7 +191,8 @@ class BookApiTest extends TestCase
 
     public function test_destroy_deletes_book_and_returns_204(): void
     {
-        $book = Book::factory()->create();
+        $owner = Sanctum::actingAs(User::factory()->create());
+        $book = Book::factory()->for($owner)->create();
         $book->genres()->attach(Genre::factory()->create());
         Review::factory()->create(['book_id' => $book->id]);
 
@@ -198,5 +201,69 @@ class BookApiTest extends TestCase
         $this->assertModelMissing($book);
         $this->assertDatabaseCount('reviews', 0);
         $this->assertDatabaseCount('book_genre', 0);
+    }
+
+    public function test_write_endpoints_require_token(): void
+    {
+        $book = Book::factory()->create();
+
+        $this->post('/api/v1/books', $this->validPayload())->assertUnauthorized()->assertExactJson(['error' => '認証が必要です。']);
+        $this->put("/api/v1/books/{$book->id}", $this->validPayload())->assertUnauthorized();
+        $this->delete("/api/v1/books/{$book->id}")->assertUnauthorized();
+        $this->withToken('invalid-token')->postJson('/api/v1/books', $this->validPayload())->assertUnauthorized();
+        $this->assertModelExists($book);
+        $this->assertDatabaseCount('books', 1);
+    }
+
+    public function test_other_users_book_cannot_be_updated_or_deleted(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+        $book = Book::factory()->create(['title' => '元のタイトル']);
+
+        $this->putJson("/api/v1/books/{$book->id}", $this->validPayload())
+            ->assertForbidden()
+            ->assertExactJson(['error' => 'この操作を行う権限がありません。']);
+        $this->deleteJson("/api/v1/books/{$book->id}")->assertForbidden();
+        $this->assertDatabaseHas('books', ['id' => $book->id, 'title' => '元のタイトル']);
+    }
+
+    public function test_read_endpoints_do_not_require_token(): void
+    {
+        $book = Book::factory()->create();
+
+        $this->getJson('/api/v1/books')->assertOk();
+        $this->getJson("/api/v1/books/{$book->id}")->assertOk();
+    }
+
+    public function test_token_can_be_issued_used_and_revoked(): void
+    {
+        $user = User::factory()->create(['email' => 'api@example.com', 'password' => 'password']);
+
+        $token = $this->postJson('/api/v1/tokens', ['email' => 'api@example.com', 'password' => 'password'])
+            ->assertCreated()
+            ->assertJsonPath('token_type', 'Bearer')
+            ->json('token');
+
+        $this->withToken($token)->postJson('/api/v1/books', $this->validPayload())
+            ->assertCreated()
+            ->assertJsonPath('data.user_id', $user->id);
+
+        $this->withToken($token)->deleteJson('/api/v1/tokens')->assertNoContent();
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
+
+    public function test_token_request_is_validated(): void
+    {
+        User::factory()->create(['email' => 'api@example.com', 'password' => 'password']);
+
+        $this->postJson('/api/v1/tokens', ['email' => 'api@example.com', 'password' => 'wrong'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['email' => 'メールアドレスまたはパスワードが正しくありません。']);
+        $this->postJson('/api/v1/tokens', [])
+            ->assertJsonValidationErrors([
+                'email' => 'メールアドレスを入力してください。',
+                'password' => 'パスワードを入力してください。',
+            ]);
+        $this->assertDatabaseCount('personal_access_tokens', 0);
     }
 }

@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\BookController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\V1\TokenController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,10 +15,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
 Route::prefix('v1')->name('api.v1.')->group(function () {
-    Route::apiResource('books', BookController::class);
+    Route::post('/tokens', [TokenController::class, 'store'])->name('tokens.store');
+    Route::apiResource('books', BookController::class)->only(['index', 'show']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::delete('/tokens', [TokenController::class, 'destroy'])->name('tokens.destroy');
+        Route::apiResource('books', BookController::class)->only(['store', 'update', 'destroy']);
+    });
 });

@@ -3,8 +3,10 @@
 namespace App\Exceptions;
 
 use App\Models\Book;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
@@ -41,6 +43,18 @@ class Handler extends ExceptionHandler
                 : '指定されたデータが見つかりません。';
 
             return response()->json(['error' => $message], 404);
+        });
+
+        // API の未認証（トークンなし・無効）と認可エラーも、404 と同じ error キーで日本語にする
+        $this->renderable(function (AuthenticationException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['error' => '認証が必要です。'], 401);
+            }
+        });
+        $this->renderable(function (AccessDeniedHttpException $e, $request) {
+            if ($request->is('api/*')) {
+                return response()->json(['error' => 'この操作を行う権限がありません。'], 403);
+            }
         });
     }
 
