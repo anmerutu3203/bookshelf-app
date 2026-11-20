@@ -87,6 +87,20 @@ class Book extends Model
     }
 
     /**
+     * 並び順を指定する。rating は平均評価の高い順で、レビューがない書籍（平均が NULL）は最後になる。
+     * 同じ順位の書籍は新しい順に並べる。rating を使うときは withAvg('reviews', 'rating') を併用すること。
+     */
+    public function scopeSortBy(Builder $query, ?string $sort): Builder
+    {
+        return match ($sort) {
+            'oldest' => $query->oldest()->orderBy('id'),
+            'title' => $query->orderBy('title')->orderByDesc('id'),
+            'rating' => $query->orderByDesc('reviews_avg_rating')->latest()->orderByDesc('id'),
+            default => $query->latest()->orderByDesc('id'),
+        };
+    }
+
+    /**
      * タイトルか著者の部分一致と、ジャンルで絞り込む。未指定の条件は無視する。
      */
     public function scopeSearch(Builder $query, ?string $keyword, ?int $genreId): Builder
