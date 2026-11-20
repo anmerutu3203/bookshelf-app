@@ -3,19 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\BookRequest;
+use App\Http\Requests\BookSearchRequest;
 use App\Models\Book;
 use App\Models\Genre;
 
 class BookController extends Controller
 {
-    public function index()
+    public function index(BookSearchRequest $request)
     {
-        $books = Book::with('genres')
+        $books = Book::search($request->validated('keyword'), $request->validated('genre'))
+            ->sortBy($request->validated('sort'))
+            ->with('genres')
             ->withAvg('reviews', 'rating')
-            ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
+        $genres = Genre::orderBy('id')->get();
 
-        return view('books.index', compact('books'));
+        return view('books.index', compact('books', 'genres'));
     }
 
     public function show(Book $book)
