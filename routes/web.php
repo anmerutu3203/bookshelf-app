@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\BookIsbnController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\RankingController;
@@ -26,6 +27,7 @@ Route::get('/ranking', [RankingController::class, 'index'])->name('ranking.index
 // 認証必須ページ
 Route::middleware('auth')->group(function () {
     Route::resource('books', BookController::class)->except(['index', 'show']);
+    Route::get('/books/isbn/{isbn}', BookIsbnController::class)->name('books.isbn');
 
     Route::resource('genres', GenreController::class);
 
