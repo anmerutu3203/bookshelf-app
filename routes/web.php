@@ -5,6 +5,7 @@ use App\Http\Controllers\BookIsbnController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\RankingController;
+use App\Http\Controllers\ReadingPlanController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ReviewLikeController;
@@ -41,8 +42,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
 
-    // ponytail: ナビゲーションのリンク先だけ用意した仮ルート。各 issue（#19・#20）で本実装に置き換える
-    foreach (['reading-plans.index' => '/reading-plans', 'notifications.index' => '/notifications'] as $name => $uri) {
+    Route::resource('reading-plans', ReadingPlanController::class)->except('show')->parameters(['reading-plans' => 'plan']);
+    Route::post('/reading-plans/{plan}/complete', [ReadingPlanController::class, 'complete'])->name('reading-plans.complete');
+
+    // ponytail: ナビゲーションのリンク先だけ用意した仮ルート。#20 で本実装に置き換える
+    foreach (['notifications.index' => '/notifications'] as $name => $uri) {
         Route::get($uri, fn () => redirect()->route('books.index')->with('error', 'この機能は準備中です。'))->name($name);
     }
 });
