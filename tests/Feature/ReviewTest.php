@@ -46,19 +46,19 @@ class ReviewTest extends TestCase
         $book = Book::factory()->create();
 
         $this->actingAs($user)->post("/books/{$book->id}/reviews", [])
-            ->assertSessionHasErrors(['rating' => '評価は必須です', 'comment' => 'コメントは必須です']);
+            ->assertSessionHasErrors(['rating' => '評価は必須です。', 'comment' => 'コメントは必須です。']);
 
         $this->actingAs($user)->post("/books/{$book->id}/reviews", ['rating' => 'abc', 'comment' => '感想'])
-            ->assertSessionHasErrors(['rating' => '評価は整数で入力してください']);
+            ->assertSessionHasErrors(['rating' => '評価は整数で入力してください。']);
         foreach ([0, 6] as $rating) {
             $this->actingAs($user)->post("/books/{$book->id}/reviews", ['rating' => $rating, 'comment' => '感想'])
-                ->assertSessionHasErrors(['rating' => '評価は１～５の整数で入力してください']);
+                ->assertSessionHasErrors(['rating' => '評価は１～５の整数で入力してください。']);
         }
         $this->actingAs($user)->post("/books/{$book->id}/reviews", ['rating' => 3, 'comment' => ['配列']])
-            ->assertSessionHasErrors(['comment' => 'コメントは文字列で入力してください']);
+            ->assertSessionHasErrors(['comment' => 'コメントは文字列で入力してください。']);
 
         $this->actingAs($user)->post("/books/{$book->id}/reviews", ['rating' => 3, 'comment' => str_repeat('あ', 1001)])
-            ->assertSessionHasErrors(['comment' => 'コメントは1000文字以内で入力してください']);
+            ->assertSessionHasErrors(['comment' => 'コメントは1000文字以内で入力してください。']);
         $this->actingAs($user)->post("/books/{$book->id}/reviews", ['rating' => 3, 'comment' => str_repeat('あ', 1000)])
             ->assertSessionHasNoErrors();
         $this->assertDatabaseCount('reviews', 1);
@@ -102,7 +102,7 @@ class ReviewTest extends TestCase
         $review = Review::factory()->create();
 
         $this->actingAs($review->user)->put("/reviews/{$review->id}", ['rating' => 6, 'comment' => '感想'])
-            ->assertSessionHasErrors(['rating' => '評価は１～５の整数で入力してください']);
+            ->assertSessionHasErrors(['rating' => '評価は１～５の整数で入力してください。']);
     }
 
     public function test_other_user_cannot_edit_update_or_delete_review(): void
