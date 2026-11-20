@@ -11,7 +11,7 @@ class BookSeeder extends Seeder
 {
     public function run(): void
     {
-        $userId = User::first()->id;
+        $users = User::all();
 
         $books = [
             ['吾輩は猫である', '夏目漱石', '9784101010014', '1905-01-01', ['小説'], '中学教師の家に飼われる名前のない猫の目を通して、明治の知識人たちの滑稽な日常を風刺的に描いた漱石の処女長編。'],
@@ -31,7 +31,7 @@ class BookSeeder extends Seeder
             $book = Book::firstOrCreate(
                 ['isbn' => $isbn],
                 [
-                    'user_id' => $userId,
+                    'user_id' => $users->random()->id,
                     'title' => $title,
                     'author' => $author,
                     'published_date' => $publishedDate,
