@@ -31,11 +31,17 @@ class ReadingPlan extends Model
         'status' => 'in_progress',
     ];
 
+    /**
+     * 計画を立てたユーザー。
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * 計画対象の書籍。
+     */
     public function book(): BelongsTo
     {
         return $this->belongsTo(Book::class);

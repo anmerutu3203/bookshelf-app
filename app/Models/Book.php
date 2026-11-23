@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
 class Book extends Model
@@ -26,22 +29,34 @@ class Book extends Model
         'published_date' => 'date',
     ];
 
-    public function user()
+    /**
+     * 書籍の登録者。
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function genres()
+    /**
+     * 書籍に紐付くジャンル。
+     */
+    public function genres(): BelongsToMany
     {
         return $this->belongsToMany(Genre::class)->withTimestamps();
     }
 
-    public function reviews()
+    /**
+     * 書籍へのレビュー。
+     */
+    public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
     }
 
-    public function favoritedByUsers()
+    /**
+     * 書籍をお気に入りに追加したユーザー。
+     */
+    public function favoritedByUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'favorites')->withTimestamps();
     }

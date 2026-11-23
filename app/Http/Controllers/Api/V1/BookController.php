@@ -12,6 +12,9 @@ use Illuminate\Http\Response;
 
 class BookController extends Controller
 {
+    /**
+     * 書籍一覧を keyword・ジャンル・per_page で絞り込み、ページネーションして返す。
+     */
     public function index(BookIndexRequest $request): BookCollection
     {
         $books = Book::search($request->validated('keyword'), $request->validated('genre_id'))
@@ -25,6 +28,9 @@ class BookController extends Controller
         return new BookCollection($books);
     }
 
+    /**
+     * 書籍詳細をジャンル・レビュー付きで返す。
+     */
     public function show(Book $book): BookResource
     {
         $book->load(['genres', 'reviews.user'])->loadAvg('reviews', 'rating')->loadCount('reviews');
@@ -32,6 +38,9 @@ class BookController extends Controller
         return new BookResource($book);
     }
 
+    /**
+     * 書籍を登録して 201 で返す。
+     */
     public function store(BookRequest $request): BookResource
     {
         // 登録者はトークンの持ち主にする
@@ -45,6 +54,9 @@ class BookController extends Controller
         return new BookResource($book->load('genres'));
     }
 
+    /**
+     * 書籍を更新する（所有者のみ）。
+     */
     public function update(BookRequest $request, Book $book): BookResource
     {
         $this->authorize('update', $book);
@@ -54,6 +66,9 @@ class BookController extends Controller
         return new BookResource($book->load('genres'));
     }
 
+    /**
+     * 書籍を削除して 204 を返す（所有者のみ）。
+     */
     public function destroy(Book $book): Response
     {
         $this->authorize('delete', $book);

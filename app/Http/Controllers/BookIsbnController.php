@@ -10,6 +10,9 @@ use Illuminate\Http\JsonResponse;
 
 class BookIsbnController extends Controller
 {
+    /**
+     * ISBN で Google Books API を検索し、フォーム入力用の書籍情報を JSON で返す。
+     */
     public function __invoke(IsbnSearchRequest $request, GoogleBooksService $googleBooks): JsonResponse
     {
         try {

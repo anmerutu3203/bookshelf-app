@@ -24,6 +24,9 @@ class ReadingPlanPolicy
         return $this->update($user, $plan);
     }
 
+    /**
+     * 読書計画を削除できるのは所有者のみ。
+     */
     public function delete(User $user, ReadingPlan $plan): bool
     {
         return $user->id === $plan->user_id;
