@@ -8,6 +8,9 @@ use Illuminate\View\View;
 
 class NotificationController extends Controller
 {
+    /**
+     * 自分宛ての通知を新しい順に表示する。
+     */
     public function index(Request $request): View
     {
         // ponytail: 画面にページネーションがないため全件表示。件数が増えたら paginate と Blade の links() を追加する
