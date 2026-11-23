@@ -24,13 +24,13 @@ class ReviewLikeTest extends TestCase
         $bookPage = "/books/{$review->book_id}";
 
         $this->actingAs($user)->from($bookPage)->post("/reviews/{$review->id}/like")
-            ->assertRedirect($bookPage)
+            ->assertRedirect(url($bookPage)."#review-{$review->id}")
             ->assertSessionMissing('success');
         $this->assertDatabaseHas('review_likes', ['user_id' => $user->id, 'review_id' => $review->id]);
         $this->get($bookPage)->assertSee('いいね済み (1)');
 
         $this->actingAs($user)->from($bookPage)->post("/reviews/{$review->id}/like")
-            ->assertRedirect($bookPage);
+            ->assertRedirect(url($bookPage)."#review-{$review->id}");
         $this->assertDatabaseMissing('review_likes', ['user_id' => $user->id, 'review_id' => $review->id]);
         $this->actingAs($user->fresh())->get($bookPage)->assertSee('いいね (0)');
     }

@@ -143,7 +143,7 @@
                         @if($book->reviews->count() > 0)
                             <div class="space-y-4">
                                 @foreach($book->reviews as $review)
-                                    <div class="border rounded-lg p-4">
+                                    <div id="review-{{ $review->id }}" class="border rounded-lg p-4 scroll-mt-24">
                                         <div class="flex items-center justify-between mb-2">
                                             <div>
                                                 <span class="font-semibold">{{ $review->user->name }}</span>
