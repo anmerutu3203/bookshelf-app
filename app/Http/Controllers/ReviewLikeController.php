@@ -9,12 +9,10 @@ use Illuminate\Http\Request;
 class ReviewLikeController extends Controller
 {
     /**
-     * レビューへのいいねを追加・解除する。
+     * レビューへのいいねを追加・解除する。自分のレビューにもいいねできる。
      */
     public function toggle(Request $request, Review $review): RedirectResponse
     {
-        $this->authorize('like', $review);
-
         $request->user()->likedReviews()->toggle($review->id);
 
         return back();

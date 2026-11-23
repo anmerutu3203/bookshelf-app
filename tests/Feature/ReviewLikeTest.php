@@ -43,12 +43,12 @@ class ReviewLikeTest extends TestCase
         $this->assertDatabaseCount('review_likes', 0);
     }
 
-    public function test_user_cannot_like_own_review(): void
+    public function test_user_can_like_own_review(): void
     {
         $review = Review::factory()->create();
 
-        $this->actingAs($review->user)->post("/reviews/{$review->id}/like")->assertForbidden();
-        $this->assertDatabaseCount('review_likes', 0);
+        $this->actingAs($review->user)->post("/reviews/{$review->id}/like")->assertRedirect();
+        $this->assertDatabaseHas('review_likes', ['user_id' => $review->user_id, 'review_id' => $review->id]);
     }
 
     public function test_toggle_returns_404_for_missing_review(): void
